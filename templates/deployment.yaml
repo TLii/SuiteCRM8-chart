@@ -1,0 +1,172 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "suitecrm8.fullname" . }}
+  labels:
+    {{- include "suitecrm8.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "suitecrm8.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "suitecrm8.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "suitecrm8.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        {{- if .Values.containers.php.enabled -}}
+        - name: php
+          env:
+            {{ range $key, $value := .envVars }}
+          {{- if eq $.Values.db.type "internal" -}}
+            - name: DATABASE_NAME
+              value: {{ .Values.db.internal_db.database_name  | quote}}
+            - name: DATABASE_USER
+              value: {{ .Values.db.internal_db.database_user | quote}}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.db.internal_db.database_password | quote}}
+            - name: DATABASE SERVER
+              value: 
+            - name: 
+          {{- else if eq .Values.db.type "external" -}}
+            - name: DATABASE_NAME
+              value: {{ .Values.db.external_db.database_name | quote }}
+            - name: DATABASE_USER
+              value: {{ .Values.db.external_db.database_user | quote }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.db.external_db.database_password | quote }}
+            - name: DATABASE SERVER
+              value: {{ .Values.db.external_db.database_host | default "localhost" | quote}}
+          {{- end -}}}}
+            - name: ADMIN_USER
+              value: {{ .Values.suiteCRM.adminUsername }}
+            - name: ADMIN_PASSWORD
+              value: {{ .Values.suiteCRM.adminPassword }}
+            - name: SUITECRM_SITEURL
+              value: {{ .Values.suiteCRM.siteUrl }}
+          {{- if .Values.suiteCRM.enableDemoData -}}
+            - name: DEMO_DATA
+              value: "yes"
+          {{- end -}}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.containers.php.resources | nindent 12 }}
+        {{ end}}
+        {{- if .Values.containers.nginx.enabled -}}
+        - name: nginx
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources: {{- toYaml .Values.containers.nginx.resources | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+        {{ if eq .Values.db.type "internal" }}
+        - name: db
+          env: 
+          {{ if .Values.db.internal_db.database_password }}
+          - name: MARIADB_ROOT_PASSWORD 
+            value: {{ .Values.db.internal_db.mariadb_root_password | quote }}
+          {{ else }}
+          - name: MARIADB_RANDOM_ROOT_PASSWORD 
+            value: 'yes'
+          {{- end -}}
+          - name: MARIADB_DATABASE
+            value: {{ .Values.db.internal_db.database_name | quote }}
+          - name: MARIADB_USER
+            value: {{ .Values.db.internal_db.database_user | quote }}
+          - name: MARIADB_PASSWORD
+            value: {{ .Values.db.internal_db.database_password | quote }}
+          - name: MARIADB_AUTO_UPGRADE
+            value: {{ .Values.db.internal_db.mariadb_auto_upgrade | quote}}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{ if .Values.db.persistent }}
+          volumeMounts:
+            - name: mariadb
+              mountPath: /var/lib/mysql
+          {{ end }}
+        {{- end -}}}}
+        
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes: 
+      {{ if .Values.persistence.enabled }}
+      {{ if eq .Values.db.type "internal" }}
+        - name: mariadb
+          persistentVolumeClaim:
+            claimName: {{ .Chart.Name }}-db-data
+          size: 1Gi
+      {{- end -}}
+        - name: wwwdata
+          persistentVolumeClaim:
+            claimName: {{ .Chart.Name }}-wwwdata
+          size:
+        - name: upload
+          persistentVolumeClaim:
+            claimName: {{ .Chart.Name }}-upload
+        - name: custom
+          persistentVolumeClaim:
+            claimName: {{ .Chart.Name }}-custom
+        - name: config
+          persistentVolumeClaim:
+            claimName: {{ .Chart.Name }}-config
+      {{ else }}
+        {{ if eq .Values.db.type "internal" }}
+        - name: mariadb
+          emptyDir: {}
+        {{- end -}}
+        - name: wwwdata
+          emptyDir: {}
+        - name: upload
+          emptyDir: {}
+        - name: custom
+          emptyDir: {}
+        - name: config
+        {{ end }}
+        
+        {{- end -}}}}
