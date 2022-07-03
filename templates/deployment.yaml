@@ -4,6 +4,7 @@ metadata:
   name: {{ include "suitecrm8.fullname" . }}
   labels:
     {{- include "suitecrm8.labels" . | nindent 4 }}
+    component: deployment
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -13,69 +14,74 @@ spec:
       {{- include "suitecrm8.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{ with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{ toYaml . | nindent 8 }}
+      {{ end }}
       labels:
         {{- include "suitecrm8.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{ toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "suitecrm8.serviceAccountName" . }}
+      {{ with .Values.securityContext }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
+      {{ end }}
       containers:
-        {{- if .Values.containers.php.enabled -}}
+        {{ if .Values.containers.php.enabled }}
         - name: php
           env:
-            {{ range $key, $value := .envVars }}
-          {{- if eq $.Values.db.type "internal" -}}
+            {{ if eq .Values.containers.db.type "internal" }}
             - name: DATABASE_NAME
-              value: {{ .Values.db.internal_db.database_name  | quote}}
+              value: {{ .Values.containers.db.internal_db.database_name  | quote }}
             - name: DATABASE_USER
-              value: {{ .Values.db.internal_db.database_user | quote}}
-            - name: DATABASE_PASSWORD
-              value: {{ .Values.db.internal_db.database_password | quote}}
+              value: {{ .Values.containers.db.internal_db.database_user | quote }}
+            - name: DATABASE_PASSWORD 
+              value: {{ .Values.containers.db.internal_db.database_password | quote }}
             - name: DATABASE SERVER
-              value: 
-            - name: 
-          {{- else if eq .Values.db.type "external" -}}
+              value: "localhost"
+            {{ else if eq .Values.containers.db.type "external" }}
             - name: DATABASE_NAME
-              value: {{ .Values.db.external_db.database_name | quote }}
+              value: {{ .Values.containers.db.external_db.database_name | quote }}
             - name: DATABASE_USER
-              value: {{ .Values.db.external_db.database_user | quote }}
+              value: {{ .Values.containers.db.external_db.database_user | quote }}
             - name: DATABASE_PASSWORD
-              value: {{ .Values.db.external_db.database_password | quote }}
+              value: {{ .Values.containers.db.external_db.database_password | quote }}
             - name: DATABASE SERVER
-              value: {{ .Values.db.external_db.database_host | default "localhost" | quote}}
-          {{- end -}}}}
+              value: {{ .Values.containers.db.external_db.database_host | default "localhost" | quote }}
+            {{ end }}
+            {{ if .Values.suiteCRM.adminUsername }}
             - name: ADMIN_USER
               value: {{ .Values.suiteCRM.adminUsername }}
+            {{ end }}
+            {{ if .Values.suiteCRM.adminPassword }}
             - name: ADMIN_PASSWORD
               value: {{ .Values.suiteCRM.adminPassword }}
+            {{ end }}
             - name: SUITECRM_SITEURL
               value: {{ .Values.suiteCRM.siteUrl }}
-          {{- if .Values.suiteCRM.enableDemoData -}}
+            {{ if .Values.suiteCRM.enableDemoData }}
             - name: DEMO_DATA
               value: "yes"
-          {{- end -}}
+            {{ end }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+            {{ toYaml .Values.containers.php.securityContext | nindent 12 }}
+          image: {{ .Values.containers.php.image }}:{{ .Values.containers.php.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.containers.php.imagePullPolicy }}
           resources:
-            {{- toYaml .Values.containers.php.resources | nindent 12 }}
-        {{ end}}
-        {{- if .Values.containers.nginx.enabled -}}
+            {{ toYaml .Values.containers.php.resources | nindent 12 }}
+          volumeMounts:
+            - name: db
+        {{ end }}
+        {{- if .Values.containers.nginx.enabled }}
         - name: nginx
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          resources: {{- toYaml .Values.containers.nginx.resources | nindent 12 }}
+            {{- toYaml .Values.containers.nginx.securityContext | nindent 12 }}
+          image: {{ .Values.containers.nginx.image }}:{{ .Values.containers.nginx.tag | default "alpine" }}
+          imagePullPolicy: {{ .Values.containers.nginx.imagePullPolicy }}
           ports:
             - name: http
               containerPort: 80
@@ -89,38 +95,38 @@ spec:
               path: /
               port: http
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-
-        {{ if eq .Values.db.type "internal" }}
+            {{- toYaml .Values.containers.nginx.resources | nindent 12 }}
+        {{- end }}
+        {{ if eq .Values.containers.db.type "internal" }}
         - name: db
           env: 
-          {{ if .Values.db.internal_db.database_password }}
-          - name: MARIADB_ROOT_PASSWORD 
-            value: {{ .Values.db.internal_db.mariadb_root_password | quote }}
-          {{ else }}
-          - name: MARIADB_RANDOM_ROOT_PASSWORD 
-            value: 'yes'
-          {{- end -}}
-          - name: MARIADB_DATABASE
-            value: {{ .Values.db.internal_db.database_name | quote }}
-          - name: MARIADB_USER
-            value: {{ .Values.db.internal_db.database_user | quote }}
-          - name: MARIADB_PASSWORD
-            value: {{ .Values.db.internal_db.database_password | quote }}
-          - name: MARIADB_AUTO_UPGRADE
-            value: {{ .Values.db.internal_db.mariadb_auto_upgrade | quote}}
+            {{ if .Values.containers.db.internal_db.database_password }}
+            - name: MARIADB_ROOT_PASSWORD 
+              value: {{ .Values.containers.db.internal_db.mariadb_root_password | quote }}
+            {{ else }}
+            - name: MARIADB_RANDOM_ROOT_PASSWORD 
+              value: 'yes'
+            {{ end }}
+            - name: MARIADB_DATABASE
+              value: {{ .Values.containers.db.internal_db.database_name | quote }}
+            - name: MARIADB_USER
+              value: {{ .Values.containers.db.internal_db.database_user | quote }}
+            - name: MARIADB_PASSWORD
+              value: {{ .Values.containers.db.internal_db.database_password | quote }}
+            - name: MARIADB_AUTO_UPGRADE
+              value: {{ .Values.containers.db.internal_db.mariadb_auto_upgrade | quote}}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+            {{ toYaml .Values.containers.db.internal_db.securityContext | nindent 12 }}
+          image: {{ .Values.containers.db.internal_db.image }}:{{ .Values.containers.db.internal_db.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.containers.db.internal_db.imagePullPolicy }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          {{ if .Values.db.persistent }}
+            {{ toYaml .Values.containers.db.internal_db.resources | nindent 12 }}
+          {{ if .Values.containers.db.persistent }}
           volumeMounts:
             - name: mariadb
               mountPath: /var/lib/mysql
           {{ end }}
-        {{- end -}}}}
+        {{- end }}
         
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -136,30 +142,31 @@ spec:
       {{- end }}
       volumes: 
       {{ if .Values.persistence.enabled }}
-      {{ if eq .Values.db.type "internal" }}
+      {{ if eq .Values.containers.db.type "internal" }}
         - name: mariadb
           persistentVolumeClaim:
-            claimName: {{ .Chart.Name }}-db-data
+            claimName: {{ include "suitecrm8.fullname" $ }}-db
+
           size: 1Gi
-      {{- end -}}
+      {{- end }}
         - name: wwwdata
           persistentVolumeClaim:
-            claimName: {{ .Chart.Name }}-wwwdata
+            claimName: {{ include "suitecrm8.fullname" $ }}-wwwdata
           size:
         - name: upload
           persistentVolumeClaim:
-            claimName: {{ .Chart.Name }}-upload
+            claimName: {{ include "suitecrm8.fullname" $ }}-upload
         - name: custom
           persistentVolumeClaim:
-            claimName: {{ .Chart.Name }}-custom
+            claimName: {{ include "suitecrm8.fullname" $ }}-custom
         - name: config
           persistentVolumeClaim:
-            claimName: {{ .Chart.Name }}-config
+            claimName: {{ include "suitecrm8.fullname" $ }}-config
       {{ else }}
-        {{ if eq .Values.db.type "internal" }}
+        {{ if eq .Values.containers.db.type "internal" }}
         - name: mariadb
           emptyDir: {}
-        {{- end -}}
+        {{- end }}
         - name: wwwdata
           emptyDir: {}
         - name: upload
@@ -168,5 +175,3 @@ spec:
           emptyDir: {}
         - name: config
         {{ end }}
-        
-        {{- end -}}}}
