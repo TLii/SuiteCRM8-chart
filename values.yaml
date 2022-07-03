@@ -7,6 +7,7 @@ replicaCount: 1
 imagePullSecrets: []
 nameOverride:
 fullnameOverride:
+shortnameOverride:
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -26,7 +27,11 @@ suiteCRM:
 containers:
   php:
     enabled: true # Required.
-    image: harbor.pilvity.online/suitecrm8/
+    image: harbor.pilvity.online/suitecrm8/core
+    tag: fpm-master-latest
+    imagePullPolicy: Always
+    securityContext: {}
+    # fsGroup: 2000
     resources: {}
       # limits:
       #   cpu: 100m
@@ -37,6 +42,10 @@ containers:
   nginx:
     enabled: true # If empty, nginx will not run
     image: nginx
+    tag: latest
+    imagePullPolicy: IfNotPresent
+    securityContext: {}
+      # fsGroup: 2000
     resources: {}
       # limits:
       #   cpu: 100m
@@ -47,24 +56,33 @@ containers:
   db:
     type: internal # Change to external if not using the attached MariaDB deployment
     internal_db:
+      image: mariadb
+      tag: latest-alpine
+      imagePullPolicy: IfNotPresent
+      securityContext: {}
+        # fsGroup: 2000
       name: suitecrm8
       database_user: suitecrm
       database_password: changeme
       database_name: suitecrm
-      mariadb_root_password: # If false, a random one will be created and printed on stdout
+      mariadb_root_password: # If empty/false, a random one will be created and printed on stdout
       mariadb_auto_upgrade: true # If false, mariadb won't update database automatically
+      resources: {}
+      # limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+      # requests:
+      #   cpu: 100m
+      #   memory: 128Mi
     external_db:
-        database_name: suitecrm 
-        database_user: suitecrm
-        database_password: thisshouldnotberealpassword
-        database_host: localhost
+      database_name: suitecrm 
+      database_user: suitecrm
+      database_password: thisshouldnotberealpassword
+      database_host: localhost
     
 podAnnotations:
   - name: app
     value: suitecrm8
-
-podSecurityContext: {}
-  # fsGroup: 2000
 
 securityContext: {}
   # capabilities:
@@ -111,15 +129,16 @@ affinity: {}
 
 persistence: 
   enabled: true # If null, data will not be persisted.
+  resourcePolicy: keep
   claims: # Don't rename these unless you REALLY know what you are doing
   - name: db # Volume will be created only if using internal mariadb
     accessMode: ReadWriteMany
-    storageClass: standard
+    storageClass: ""
   - name: upload
     accessMode: ReadWriteMany
     size: "32Gi"
-    storageClass: standard
+    storageClass: ""
   - name: custom
     accessMode: ReadWriteMany
     size: "8Gi"
-    storageClass: standard
+    storageClass: ""
