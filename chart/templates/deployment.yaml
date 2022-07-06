@@ -77,7 +77,9 @@ spec:
             - name: wwwdata
               mountPath: /suitecrm/public
             - name: upload
-              mountPath: /suitecrm/public
+              mountPath: /suitecrm/public/legacy/upload
+            - name: config
+              mountPath: /suitecrm/public/config
         {{ end }}
         {{- if .Values.containers.nginx.enabled }}
         - name: nginx
