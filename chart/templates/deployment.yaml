@@ -108,6 +108,8 @@ spec:
               mountPath: /suitecrm/public/legacy/upload
             - name: config
               mountPath: /suitecrm/public/config
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
         {{- end }}
         {{ if eq .Values.containers.db.type "internal" }}
         - name: db
