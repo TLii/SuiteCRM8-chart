@@ -157,9 +157,6 @@ spec:
         - name: upload
           persistentVolumeClaim:
             claimName: {{ include "suitecrm8.shortname" $ }}-upload
-        - name: custom
-          persistentVolumeClaim:
-            claimName: {{ include "suitecrm8.shortname" $ }}-custom
         - name: config
           persistentVolumeClaim:
             claimName: {{ include "suitecrm8.shortname" $ }}-config
@@ -171,8 +168,6 @@ spec:
         - name: wwwdata
           emptyDir: {}
         - name: upload
-          emptyDir: {}
-        - name: custom
           emptyDir: {}
         - name: config
         {{ end }}

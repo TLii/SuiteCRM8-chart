@@ -139,10 +139,6 @@ persistence:
     accessMode: ReadWriteMany
     size: "16Gi"
     storageClass: ""
-  - name: custom
-    accessMode: ReadWriteMany
-    size: "8Gi"
-    storageClass: ""
   - name: wwwdata
     accessMode: ReadWriteMany
     size: "8Gi"
