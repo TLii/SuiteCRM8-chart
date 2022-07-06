@@ -74,7 +74,10 @@ spec:
           resources:
             {{ toYaml .Values.containers.php.resources | nindent 12 }}
           volumeMounts:
-            - name: db
+            - name: wwwdata
+              mountPath: /suitecrm/public
+            - name: upload
+              mountPath: /suitecrm/public
         {{ end }}
         {{- if .Values.containers.nginx.enabled }}
         - name: nginx
@@ -142,26 +145,24 @@ spec:
       {{- end }}
       volumes: 
       {{ if .Values.persistence.enabled }}
+      {{ range .Values.persistence.claims}}
       {{ if eq .Values.containers.db.type "internal" }}
         - name: mariadb
           persistentVolumeClaim:
-            claimName: {{ include "suitecrm8.fullname" $ }}-db
-
-          size: 1Gi
+            claimName: {{ include "suitecrm8.shortname" $ }}-db
       {{- end }}
         - name: wwwdata
           persistentVolumeClaim:
-            claimName: {{ include "suitecrm8.fullname" $ }}-wwwdata
-          size:
+            claimName: {{ include "suitecrm8.shortname" $ }}-wwwdata
         - name: upload
           persistentVolumeClaim:
-            claimName: {{ include "suitecrm8.fullname" $ }}-upload
+            claimName: {{ include "suitecrm8.shortname" $ }}-upload
         - name: custom
           persistentVolumeClaim:
-            claimName: {{ include "suitecrm8.fullname" $ }}-custom
+            claimName: {{ include "suitecrm8.shortname" $ }}-custom
         - name: config
           persistentVolumeClaim:
-            claimName: {{ include "suitecrm8.fullname" $ }}-config
+            claimName: {{ include "suitecrm8.shortname" $ }}-config
       {{ else }}
         {{ if eq .Values.containers.db.type "internal" }}
         - name: mariadb

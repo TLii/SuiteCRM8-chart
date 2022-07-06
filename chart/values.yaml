@@ -130,16 +130,24 @@ affinity: {}
 persistence: 
   enabled: true # If null, data will not be persisted.
   resourcePolicy: keep
-  claims: # Don't rename these unless you REALLY know what you are doing
+  claims: # DO NOT RENAME these unless you REALLY know what you are doing
   - name: db # Volume will be created only if using internal mariadb
     accessMode: ReadWriteMany
     storageClass: ""
-    size: "10Gi"
+    size: "5Gi"
   - name: upload
     accessMode: ReadWriteMany
-    size: "32Gi"
+    size: "16Gi"
     storageClass: ""
   - name: custom
     accessMode: ReadWriteMany
     size: "8Gi"
+    storageClass: ""
+  - name: wwwdata
+    accessMode: ReadWriteMany
+    size: "8Gi"
+    storageClass: ""
+  - name: config
+    accessMode: ReadWriteMany
+    size: "1Gi"
     storageClass: ""
