@@ -14,7 +14,7 @@ spec:
     - {{ .accessMode }}
   resources:
     requests:
-      storage: {{ .size }}
+      storage: {{ .size | default "10Gi" | quote }}
   {{ if .storageClass }}
   {{ if eq "-" .storageClass }}
   storageClassName: ""

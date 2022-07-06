@@ -134,6 +134,7 @@ persistence:
   - name: db # Volume will be created only if using internal mariadb
     accessMode: ReadWriteMany
     storageClass: ""
+    size: "10Gi"
   - name: upload
     accessMode: ReadWriteMany
     size: "32Gi"
