@@ -101,6 +101,13 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.containers.nginx.resources | nindent 12 }}
+          volumeMounts:
+            - name: wwwdata
+              mountPath: /suitecrm/public
+            - name: upload
+              mountPath: /suitecrm/public/legacy/upload
+            - name: config
+              mountPath: /suitecrm/public/config
         {{- end }}
         {{ if eq .Values.containers.db.type "internal" }}
         - name: db
