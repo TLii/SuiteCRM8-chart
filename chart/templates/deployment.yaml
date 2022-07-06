@@ -147,7 +147,6 @@ spec:
       {{- end }}
       volumes: 
       {{ if .Values.persistence.enabled }}
-      {{ range .Values.persistence.claims}}
       {{ if eq .Values.containers.db.type "internal" }}
         - name: mariadb
           persistentVolumeClaim:
