@@ -27,7 +27,7 @@ suiteCRM:
 containers:
   php:
     enabled: true # Required.
-    image: harbor.pilvity.online/suitecrm8/core
+    image: harbor.pilvity.online/suitecrm8/suitecrm8-core
     tag: fpm-latest
     imagePullPolicy: Always
     securityContext: {}
