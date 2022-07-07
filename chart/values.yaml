@@ -81,8 +81,7 @@ containers:
       database_host: localhost
     
 podAnnotations:
-  - name: app
-    value: suitecrm8
+  app: suitecrm8
 
 securityContext: {}
   # capabilities:

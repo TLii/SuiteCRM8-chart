@@ -14,16 +14,16 @@ spec:
       {{- include "suitecrm8.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{ with .Values.podAnnotations }}
+      {{- with .Values.podAnnotations }}
       annotations:
-        {{ toYaml . | nindent 8 }}
-      {{ end }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
         {{- include "suitecrm8.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{ toYaml . | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "suitecrm8.serviceAccountName" . }}
       {{ with .Values.securityContext }}
