@@ -54,7 +54,13 @@ helm.sh/chart: {{ include "suitecrm8.chart" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
+{{- if .Release.Service }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+app.kubernetes.io/name: suitecrm8
+{{- if .Release.Name }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
 {{- end }}
 
 {{/*
