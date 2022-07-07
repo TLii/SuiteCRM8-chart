@@ -41,7 +41,7 @@ spec:
               value: {{ .Values.containers.db.internal_db.database_user | quote }}
             - name: DATABASE_PASSWORD 
               value: {{ .Values.containers.db.internal_db.database_password | quote }}
-            - name: DATABASE SERVER
+            - name: DATABASE_SERVER
               value: "localhost"
             {{ else if eq .Values.containers.db.type "external" }}
             - name: DATABASE_NAME
@@ -50,7 +50,7 @@ spec:
               value: {{ .Values.containers.db.external_db.database_user | quote }}
             - name: DATABASE_PASSWORD
               value: {{ .Values.containers.db.external_db.database_password | quote }}
-            - name: DATABASE SERVER
+            - name: DATABASE_SERVER
               value: {{ .Values.containers.db.external_db.database_host | default "localhost" | quote }}
             {{ end }}
             {{ if .Values.suiteCRM.adminUsername }}
