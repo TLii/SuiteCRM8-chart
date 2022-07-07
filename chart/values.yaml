@@ -28,7 +28,7 @@ containers:
   php:
     enabled: true # Required.
     image: harbor.pilvity.online/suitecrm8/core
-    tag: fpm-master-latest
+    tag: fpm-latest
     imagePullPolicy: Always
     securityContext: {}
     # fsGroup: 2000
