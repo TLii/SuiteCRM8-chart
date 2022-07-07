@@ -19,7 +19,7 @@ serviceAccount:
   name: ""
 
 suiteCRM:
-  siteUrl: "" # Add correct site url.
+  siteUrl: "example.com" # Add correct site url.
   enableDemoData: true # Any non-null value will cause demo data to be installed.
   adminUsername: # If left null, a random username is used and printed to stdout.
   adminPassword: # If left null, a random password is used and printed to stdout.
