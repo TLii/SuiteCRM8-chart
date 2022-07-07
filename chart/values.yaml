@@ -42,7 +42,7 @@ containers:
   nginx:
     enabled: true # If empty, nginx will not run
     image: nginx
-    tag: latest
+    tag: alpine
     imagePullPolicy: IfNotPresent
     securityContext: {}
       # fsGroup: 2000
@@ -57,7 +57,7 @@ containers:
     type: internal # Change to external if not using the attached MariaDB deployment
     internal_db:
       image: mariadb
-      tag: latest-alpine
+      tag: latest
       imagePullPolicy: IfNotPresent
       securityContext: {}
         # fsGroup: 2000
