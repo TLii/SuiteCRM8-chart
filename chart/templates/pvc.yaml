@@ -1,6 +1,6 @@
 {{ if .Values.persistence.enabled }}
 {{ range .Values.persistence.claims }}
-{{ if or ( ne .name "db") (and (eq .name "db") (eq $.Values.containers.db.type "internal")) }}
+{{ if or ( ne .name "db") (and (eq .name "db") (eq $.Values.db.type "internal")) }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:

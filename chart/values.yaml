@@ -24,61 +24,60 @@ suiteCRM:
   adminUsername: # If left null, a random username is used and printed to stdout.
   adminPassword: # If left null, a random password is used and printed to stdout.
 
-containers:
-  php:
-    enabled: true # Required.
-    image: harbor.pilvity.online/suitecrm8/suitecrm8-core
-    tag: fpm-latest
-    imagePullPolicy: Always
-    securityContext: {}
+php:
+  enabled: true # Required.
+  image: harbor.pilvity.online/suitecrm8/suitecrm8-core
+  tag: fpm-latest
+  imagePullPolicy: Always
+  securityContext: {}
+  # fsGroup: 2000
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+nginx:
+  enabled: true # If empty, nginx will not run
+  image: nginx
+  tag: alpine
+  imagePullPolicy: IfNotPresent
+  securityContext: {}
     # fsGroup: 2000
-    resources: {}
-      # limits:
-      #   cpu: 100m
-      #   memory: 128Mi
-      # requests:
-      #   cpu: 100m
-      #   memory: 128Mi
-  nginx:
-    enabled: true # If empty, nginx will not run
-    image: nginx
-    tag: alpine
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+db:
+  type: internal # Change to external if not using the attached MariaDB deployment
+  internal_db:
+    image: mariadb
+    tag: latest
     imagePullPolicy: IfNotPresent
     securityContext: {}
       # fsGroup: 2000
+    name: suitecrm8
+    database_user: suitecrm
+    database_password: changeme
+    database_name: suitecrm
+    mariadb_root_password: # If empty/false, a random one will be created and printed on stdout
+    mariadb_auto_upgrade: true # If false, mariadb won't update database automatically
     resources: {}
-      # limits:
-      #   cpu: 100m
-      #   memory: 128Mi
-      # requests:
-      #   cpu: 100m
-      #   memory: 128Mi
-  db:
-    type: internal # Change to external if not using the attached MariaDB deployment
-    internal_db:
-      image: mariadb
-      tag: latest
-      imagePullPolicy: IfNotPresent
-      securityContext: {}
-        # fsGroup: 2000
-      name: suitecrm8
-      database_user: suitecrm
-      database_password: changeme
-      database_name: suitecrm
-      mariadb_root_password: # If empty/false, a random one will be created and printed on stdout
-      mariadb_auto_upgrade: true # If false, mariadb won't update database automatically
-      resources: {}
-      # limits:
-      #   cpu: 100m
-      #   memory: 128Mi
-      # requests:
-      #   cpu: 100m
-      #   memory: 128Mi
-    external_db:
-      database_name: suitecrm 
-      database_user: suitecrm
-      database_password: thisshouldnotberealpassword
-      database_host: localhost
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  external_db:
+    database_name: suitecrm
+    database_user: suitecrm
+    database_password: thisshouldnotberealpassword
+    database_host: localhost
     
 podAnnotations:
   app: suitecrm8

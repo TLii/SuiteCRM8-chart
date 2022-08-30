@@ -31,27 +31,27 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{ end }}
       containers:
-        {{ if .Values.containers.php.enabled }}
+        {{ if .Values.php.enabled }}
         - name: php
           env:
-            {{ if eq .Values.containers.db.type "internal" }}
+            {{ if eq .Values.db.type "internal" }}
             - name: DATABASE_NAME
-              value: {{ .Values.containers.db.internal_db.database_name  | quote }}
+              value: {{ .Values.db.internal_db.database_name  | quote }}
             - name: DATABASE_USER
-              value: {{ .Values.containers.db.internal_db.database_user | quote }}
+              value: {{ .Values.db.internal_db.database_user | quote }}
             - name: DATABASE_PASSWORD 
-              value: {{ .Values.containers.db.internal_db.database_password | quote }}
+              value: {{ .Values.db.internal_db.database_password | quote }}
             - name: DATABASE_SERVER
               value: "localhost"
-            {{ else if eq .Values.containers.db.type "external" }}
+            {{ else if eq .Values.db.type "external" }}
             - name: DATABASE_NAME
-              value: {{ .Values.containers.db.external_db.database_name | quote }}
+              value: {{ .Values.db.external_db.database_name | quote }}
             - name: DATABASE_USER
-              value: {{ .Values.containers.db.external_db.database_user | quote }}
+              value: {{ .Values.db.external_db.database_user | quote }}
             - name: DATABASE_PASSWORD
-              value: {{ .Values.containers.db.external_db.database_password | quote }}
+              value: {{ .Values.db.external_db.database_password | quote }}
             - name: DATABASE_SERVER
-              value: {{ .Values.containers.db.external_db.database_host | default "localhost" | quote }}
+              value: {{ .Values.db.external_db.database_host | default "localhost" | quote }}
             {{ end }}
             {{ if .Values.suiteCRM.adminUsername }}
             - name: ADMIN_USER
@@ -68,11 +68,11 @@ spec:
               value: "yes"
             {{ end }}
           securityContext:
-            {{ toYaml .Values.containers.php.securityContext | nindent 12 }}
-          image: {{ .Values.containers.php.image }}:{{ .Values.containers.php.tag | default .Chart.AppVersion }}
-          imagePullPolicy: {{ .Values.containers.php.imagePullPolicy }}
+            {{ toYaml .Values.php.securityContext | nindent 12 }}
+          image: {{ .Values.php.image }}:{{ .Values.php.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.php.imagePullPolicy }}
           resources:
-            {{ toYaml .Values.containers.php.resources | nindent 12 }}
+            {{ toYaml .Values.php.resources | nindent 12 }}
           volumeMounts:
             - name: wwwdata
               mountPath: /suitecrm/public
@@ -81,12 +81,12 @@ spec:
             - name: config
               mountPath: /suitecrm/public/config
         {{ end }}
-        {{- if .Values.containers.nginx.enabled }}
+        {{- if .Values.nginx.enabled }}
         - name: nginx
           securityContext:
-            {{- toYaml .Values.containers.nginx.securityContext | nindent 12 }}
-          image: {{ .Values.containers.nginx.image }}:{{ .Values.containers.nginx.tag | default "alpine" }}
-          imagePullPolicy: {{ .Values.containers.nginx.imagePullPolicy }}
+            {{- toYaml .Values.nginx.securityContext | nindent 12 }}
+          image: {{ .Values.nginx.image }}:{{ .Values.nginx.tag | default "alpine" }}
+          imagePullPolicy: {{ .Values.nginx.imagePullPolicy }}
           ports:
             - name: http
               containerPort: 80
@@ -100,7 +100,7 @@ spec:
               path: /
               port: http
           resources:
-            {{- toYaml .Values.containers.nginx.resources | nindent 12 }}
+            {{- toYaml .Values.nginx.resources | nindent 12 }}
           volumeMounts:
             - name: wwwdata
               mountPath: /suitecrm/public
@@ -111,31 +111,31 @@ spec:
             - name: nginx-conf
               mountPath: /etc/nginx/conf.d
         {{- end }}
-        {{ if eq .Values.containers.db.type "internal" }}
+        {{ if eq .Values.db.type "internal" }}
         - name: db
           env: 
-            {{ if .Values.containers.db.internal_db.database_password }}
+            {{ if .Values.db.internal_db.database_password }}
             - name: MARIADB_ROOT_PASSWORD 
-              value: {{ .Values.containers.db.internal_db.mariadb_root_password | quote }}
+              value: {{ .Values.db.internal_db.mariadb_root_password | quote }}
             {{ else }}
             - name: MARIADB_RANDOM_ROOT_PASSWORD 
               value: 'yes'
             {{ end }}
             - name: MARIADB_DATABASE
-              value: {{ .Values.containers.db.internal_db.database_name | quote }}
+              value: {{ .Values.db.internal_db.database_name | quote }}
             - name: MARIADB_USER
-              value: {{ .Values.containers.db.internal_db.database_user | quote }}
+              value: {{ .Values.db.internal_db.database_user | quote }}
             - name: MARIADB_PASSWORD
-              value: {{ .Values.containers.db.internal_db.database_password | quote }}
+              value: {{ .Values.db.internal_db.database_password | quote }}
             - name: MARIADB_AUTO_UPGRADE
-              value: {{ .Values.containers.db.internal_db.mariadb_auto_upgrade | quote}}
+              value: {{ .Values.db.internal_db.mariadb_auto_upgrade | quote}}
           securityContext:
-            {{ toYaml .Values.containers.db.internal_db.securityContext | nindent 12 }}
-          image: {{ .Values.containers.db.internal_db.image }}:{{ .Values.containers.db.internal_db.tag | default .Chart.AppVersion }}
-          imagePullPolicy: {{ .Values.containers.db.internal_db.imagePullPolicy }}
+            {{ toYaml .Values.db.internal_db.securityContext | nindent 12 }}
+          image: {{ .Values.db.internal_db.image }}:{{ .Values.db.internal_db.tag | default .Chart.AppVersion }}
+          imagePullPolicy: {{ .Values.db.internal_db.imagePullPolicy }}
           resources:
-            {{ toYaml .Values.containers.db.internal_db.resources | nindent 12 }}
-          {{ if .Values.containers.db.persistent }}
+            {{ toYaml .Values.db.internal_db.resources | nindent 12 }}
+          {{ if .Values.db.persistent }}
           volumeMounts:
             - name: mariadb
               mountPath: /var/lib/mysql
@@ -156,7 +156,7 @@ spec:
       {{- end }}
       volumes: 
       {{ if .Values.persistence.enabled }}
-      {{ if eq .Values.containers.db.type "internal" }}
+      {{ if eq .Values.db.type "internal" }}
         - name: mariadb
           persistentVolumeClaim:
             claimName: {{ include "suitecrm8.shortname" $ }}-db
@@ -174,7 +174,7 @@ spec:
           configMap:
             name: {{ include "suitecrm8.shortname" . }}-nginx-configs
       {{ else }}
-        {{ if eq .Values.containers.db.type "internal" }}
+        {{ if eq .Values.db.type "internal" }}
         - name: mariadb
           emptyDir: {}
         {{- end }}
